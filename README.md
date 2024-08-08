@@ -323,16 +323,38 @@ Create a new XML resource file under `res/xml` directory named `network_security
 </network-security-config>
 ```
 
-#### `res/xml/network_security_config.xml`
+### Check Android Manifest Permissions
+
+Ensure your `AndroidManifest.xml` includes the following permission:
 
 ```xml
-<?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">192.168.1.100</domain> <!-- Replace with your local IP -->
-    </domain-config>
-</network-security-config>
+<uses-permission android:name="android.permission.INTERNET" />
 ```
+
+### Start Django Server
+
+Run the Django server on all interfaces to make it accessible from your Android device or emulator:
+
+```sh
+python manage.py runserver 0.0.0.0:8000
+```
+
+### Update Django `settings.py`
+
+Ensure `ALLOWED_HOSTS` includes the IP address of your local machine:
+
+```python
+ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '127.0.0.1', '<YOUR_LOCAL_IP>']
+```
+
+### Validate Network Access
+
+Ensure your development machine and Android device/emulator are on the same network and can communicate with each other.
+
+### Test Connectivity
+
+1. **Ping the Server**: From your Android device/emulator, try to ping the local machine's IP address to ensure connectivity.
+2. **Use a Browser**: Open a web browser on your Android device/emulator and navigate to `http://<YOUR_LOCAL_IP>:8000/` to verify the Django server is reachable.
 
 ### Restart Your Application
 
