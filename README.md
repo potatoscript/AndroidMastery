@@ -6,18 +6,10 @@ Welcome to **AndroidMastery**, a comprehensive project designed to help you mast
 
 - [Introduction](#introduction)
 - [Connect Android to Django API](#connect-android-to-django-api)
+- [Resolve Security Policies Issue](#resolve-security-policies-issue)
 
 ## Introduction
-### Introduction to Android Application Development
-
-#### What is Android?
 Android is a mobile operating system developed by Google. It is based on a modified version of the Linux kernel and other open-source software. Android is designed primarily for touchscreen mobile devices such as smartphones and tablets. It has a large user base and offers a rich application ecosystem.
-
-#### Why Develop for Android?
-1. **Large User Base**: Android powers billions of devices globally, providing a vast potential audience for your application.
-2. **Open Source**: The open-source nature of Android allows developers to access and modify the source code, fostering innovation and customization.
-3. **Versatility**: Android runs on a variety of devices including phones, tablets, wearables, TVs, and even cars.
-4. **Extensive Development Tools**: Tools like Android Studio provide a robust development environment with rich libraries, frameworks, and support.
 
 #### Getting Started with Android Development
 
@@ -290,3 +282,58 @@ public class MainActivity extends AppCompatActivity {
     }
 }
 ```
+
+## Resolve Security Policies Issue
+The error `CLEARTEXT communication to [my localhost IP] not permitted by network security policy` indicates that your app is trying to make an insecure (non-HTTPS) network request, which is blocked by default due to security policies.
+
+To resolve this, you need to allow cleartext traffic for your development purposes. Here's how you can do it:
+
+### 1. Update `AndroidManifest.xml`
+
+You need to create or update your `network_security_config.xml` and reference it in your `AndroidManifest.xml`.
+
+#### `AndroidManifest.xml`
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.myjapanese">
+
+    <application
+        android:networkSecurityConfig="@xml/network_security_config"
+        ... >
+        ...
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
+```
+
+### 2. Create `network_security_config.xml`
+
+Create a new XML resource file under `res/xml` directory named `network_security_config.xml` with the following content:
+
+#### `res/xml/network_security_config.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">[YOUR_LOCAL_IP]</domain>
+    </domain-config>
+</network-security-config>
+```
+
+#### `res/xml/network_security_config.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.1.100</domain> <!-- Replace with your local IP -->
+    </domain-config>
+</network-security-config>
+```
+
+### Restart Your Application
+
+After making these changes, rebuild and restart your application. Your app should now be able to make cleartext (HTTP) requests to your local Django server.
