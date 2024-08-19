@@ -4,10 +4,21 @@ import com.google.gson.annotations.SerializedName;
 
 public class Location {
 
+    @SerializedName("id")
+    private int id;
+
     @SerializedName("locationName")
     private String locationName;
 
     // Getters and setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getLocationName() {
         return locationName;
     }

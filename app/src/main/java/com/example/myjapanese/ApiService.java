@@ -15,9 +15,12 @@ public interface ApiService {
     @GET("potato_posts/")
     Call<List<PotatoPost>> getPotatoPosts();
 
-    @GET("locations/")
+    @GET("location/")
     Call<List<Location>> getLocations();
 
     @GET("item/")
     Call<List<Item>> getItems();
+
+    @POST("item/")
+    Call<Item> createItem(@Body Item item);
 }

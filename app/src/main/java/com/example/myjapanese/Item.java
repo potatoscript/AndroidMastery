@@ -1,42 +1,23 @@
 package com.example.myjapanese;
 
 import com.google.gson.annotations.SerializedName;
-import java.util.Date;
 
 public class Item {
-
     @SerializedName("itemName")
     private String itemName;
 
-    @SerializedName("date_added")
-    private Date dateAdded;
-
     @SerializedName("itemLocation")
-    private Location itemLocation;
+    private int itemLocation;  // Send the ID of the location
 
-    // Getters and setters
+    // Constructor
+    public Item(String itemName, int itemLocation) {
+        this.itemName = itemName;
+        this.itemLocation = itemLocation;
+    }
+
     public String getItemName() {
         return itemName;
     }
 
-    public void setItemName(String itemName) {
-        this.itemName = itemName;
-    }
-
-    public Date getDateAdded() {
-        return dateAdded;
-    }
-
-    public void setDateAdded(Date dateAdded) {
-        this.dateAdded = dateAdded;
-    }
-
-    public Location getItemLocation() {
-        return itemLocation;
-    }
-
-    public void setItemLocation(Location itemLocation) {
-        this.itemLocation = itemLocation;
-    }
+    // Getters and setters...
 }
-
