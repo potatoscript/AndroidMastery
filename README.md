@@ -9,6 +9,7 @@ Welcome to **AndroidMastery**, a comprehensive project designed to help you mast
 - [Resolve Security Policies Issue](#resolve-security-policies-issue)
 - [Resolve Response Error Issue](#resolve-response-error-issue)
 - [JSON Object Error Issue](#json-object-error-issue)
+- [Communication not permitted Error Issue](#communication-not-permitted-error-issue)
 
 ## Introduction
 [Table of Contents](#table-of-contents)<br>
@@ -559,3 +560,95 @@ The error `java.lang.IllegalStateException: Expected BEGIN_OBJECT but was NUMBER
 ### Recommendation:
 
 The preferred approach is to update your Django API serialization to return the full `Location` object for `itemLocation`, matching your current Android model structure. This gives you more flexibility and ensures that the data is ready for use in the Android app without requiring additional API calls.
+
+## Communication not permitted Error Issue
+[Table of Contents](#table-of-contents)<br>
+
+The error `CLEARTEXT communication to [my localhost IP] not permitted by network security policy` indicates that your app is trying to make an insecure (non-HTTPS) network request, which is blocked by default due to security policies.
+
+To resolve this, you need to allow cleartext traffic for your development purposes. Here's how you can do it:
+
+### 1. Update `AndroidManifest.xml`
+
+You need to create or update your `network_security_config.xml` and reference it in your `AndroidManifest.xml`.
+
+#### `AndroidManifest.xml`
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.myjapanese">
+
+    <application
+        android:networkSecurityConfig="@xml/network_security_config"
+        ... >
+        ...
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
+```
+
+### 2. Create `network_security_config.xml`
+
+Create a new XML resource file under `res/xml` directory named `network_security_config.xml` with the following content:
+
+#### `res/xml/network_security_config.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">[YOUR_LOCAL_IP]</domain>
+    </domain-config>
+</network-security-config>
+```
+
+Replace `[YOUR_LOCAL_IP]` with your actual local IP address (e.g., `192.168.1.100`).
+
+### Full Example
+
+#### `AndroidManifest.xml`
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.myjapanese">
+
+    <application
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
+```
+
+#### `res/xml/network_security_config.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.1.100</domain> <!-- Replace with your local IP -->
+    </domain-config>
+</network-security-config>
+```
+
+### Restart Your Application
+
+After making these changes, rebuild and restart your application. Your app should now be able to make cleartext (HTTP) requests to your local Django server.
+
+### Note
+
+These changes should be used only for development purposes. For production, always use HTTPS to ensure secure communication between your app and your server.
