@@ -290,7 +290,6 @@ public class MainActivity extends AppCompatActivity {
 
 ## Spinner
 [Table of Contents](#table-of-contents)<br>
-Certainly! Let's break down the `fetchLocations()` method step by step:
 
 ### Purpose
 The `fetchLocations()` method is designed to retrieve a list of locations from a remote server using Retrofit, then update a `Spinner` in your Android app with the names of these locations.
