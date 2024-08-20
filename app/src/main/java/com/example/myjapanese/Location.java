@@ -26,4 +26,9 @@ public class Location {
     public void setLocationName(String locationName) {
         this.locationName = locationName;
     }
+
+    @Override
+    public String toString() {
+        return locationName;  // This will be displayed in the Spinner
+    }
 }
