@@ -6,6 +6,7 @@ Welcome to **AndroidMastery**, a comprehensive project designed to help you mast
 
 - [Introduction](#introduction)
 - [Connect Android to Django API](#connect-android-to-django-api)
+- [DatePickerDialog](#datepickerdialog)
 - [Spinner](#spinner)
 - [Resolve Security Policies Issue](#resolve-security-policies-issue)
 - [Resolve Response Error Issue](#resolve-response-error-issue)
@@ -286,6 +287,118 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 }
+```
+
+## DatePickerDialog
+[Table of Contents](#table-of-contents)<br>
+
+To create a calendar input in an Android application, you can use a `DatePickerDialog`. 
+
+This dialog allows users to pick a date using a calendar interface. 
+
+### Step 1: Add a Button or TextView to Trigger the DatePickerDialog
+
+First, you'll need a UI element like a `Button` or `TextView` that the user can click to open the `DatePickerDialog`.
+
+```xml
+<!-- activity_main.xml -->
+<Button
+    android:id="@+id/select_date_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Select Date" />
+
+<TextView
+    android:id="@+id/selected_date_text"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Selected Date" />
+```
+
+### Step 2: Implement the `DatePickerDialog` in Your Activity
+
+In your `MainActivity` (or any other activity), create and display the `DatePickerDialog` when the user clicks the button.
+
+```java
+// MainActivity.java
+import android.app.DatePickerDialog;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import java.util.Calendar;
+
+public class MainActivity extends AppCompatActivity {
+
+    private Button selectDateButton;
+    private TextView selectedDateText;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        selectDateButton = findViewById(R.id.select_date_button);
+        selectedDateText = findViewById(R.id.selected_date_text);
+
+        selectDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDatePickerDialog();
+            }
+        });
+    }
+
+    private void showDatePickerDialog() {
+        // Get the current date
+        final Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        // Create a new instance of DatePickerDialog and show it
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                MainActivity.this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        // Note: month is 0-based, so we add 1
+                        String selectedDate = dayOfMonth + "/" + (month + 1) + "/" + year;
+                        selectedDateText.setText(selectedDate);
+                    }
+                },
+                year, month, day);
+
+        datePickerDialog.show();
+    }
+}
+```
+
+### Step 3: Customize the DatePickerDialog (Optional)
+
+You can customize the `DatePickerDialog` by setting min/max dates or formatting the selected date.
+
+#### Setting Minimum and Maximum Dates
+
+You can restrict the date selection to a specific range:
+
+```java
+datePickerDialog.getDatePicker().setMinDate(calendar.getTimeInMillis());  // Set min date to current date
+calendar.add(Calendar.YEAR, 1);  // Add 1 year to the current date
+datePickerDialog.getDatePicker().setMaxDate(calendar.getTimeInMillis());  // Set max date to 1 year from today
+```
+
+#### Formatting the Date
+
+If you want to display the date in a specific format:
+
+```java
+// In the onDateSet method
+SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+String selectedDate = dateFormat.format(calendar.getTime());
+selectedDateText.setText(selectedDate);
 ```
 
 ## Spinner
