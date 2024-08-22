@@ -8,6 +8,7 @@ Welcome to **AndroidMastery**, a comprehensive project designed to help you mast
 - [Connect Android to Django API](#connect-android-to-django-api)
 - [DatePickerDialog](#datepickerdialog)
 - [Spinner](#spinner)
+- [Table](#table)
 - [Resolve Security Policies Issue](#resolve-security-policies-issue)
 - [Resolve Response Error Issue](#resolve-response-error-issue)
 - [JSON Object Error Issue](#json-object-error-issue)
@@ -737,6 +738,318 @@ With this setup, the `Spinner` will show the `locationName` to the user while ke
 With this setup, your `Spinner` will display `locationName` values to the user, but you'll have access to the corresponding `id` values when you need to use them (like when submitting the form).
 
 
+## Table
+[Table of Contents](#table-of-contents)<br>
+
+Sure! Below is the full working code for creating a table that populates `itemName`, `date_added`, and `itemLocation_id` in an Android app using `androidx.constraintlayout.widget.ConstraintLayout` and `TableLayout`.
+
+### 1. XML Layout File (`activity_main.xml`)
+
+This XML layout defines a `ConstraintLayout` with a `TableLayout` inside it. The `TableLayout` will display the items in a tabular format.
+
+```xml
+<!-- res/layout/activity_main.xml -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TableLayout
+        android:id="@+id/item_table"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Table Header -->
+        <TableRow>
+            <TextView
+                android:text="Item Name"
+                android:padding="8dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:text="Date Added"
+                android:padding="8dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:text="Location ID"
+                android:padding="8dp"
+                android:textStyle="bold"/>
+        </TableRow>
+
+        <!-- Data rows will be added programmatically -->
+        
+    </TableLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+### 2. Java Code for `MainActivity`
+
+This Java class populates the table with data from the `Item` class. It dynamically creates `TableRow` elements and populates them with `TextView` elements that display `itemName`, `date_added`, and `itemLocation_id`.
+
+```java
+// MainActivity.java
+package com.example.myjapanese;
+
+import android.os.Bundle;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TableLayout itemTable;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        itemTable = findViewById(R.id.item_table);
+
+        // Fetch items (replace this with your actual data fetching method)
+        List<Item> items = fetchItems();
+
+        // Populate the table with items
+        populateTable(items);
+    }
+
+    private void populateTable(List<Item> items) {
+        for (Item item : items) {
+            TableRow tableRow = new TableRow(this);
+
+            TextView itemNameView = new TextView(this);
+            itemNameView.setText(item.getItemName());
+            itemNameView.setPadding(8, 8, 8, 8);
+
+            TextView dateAddedView = new TextView(this);
+            dateAddedView.setText(item.getDateAdded()); // Assuming dateAdded is a String
+            dateAddedView.setPadding(8, 8, 8, 8);
+
+            TextView itemLocationIdView = new TextView(this);
+            itemLocationIdView.setText(String.valueOf(item.getItemLocationId()));
+            itemLocationIdView.setPadding(8, 8, 8, 8);
+
+            tableRow.addView(itemNameView);
+            tableRow.addView(dateAddedView);
+            tableRow.addView(itemLocationIdView);
+
+            itemTable.addView(tableRow);
+        }
+    }
+
+    // Dummy method to fetch items (replace this with your actual data fetching method)
+    private List<Item> fetchItems() {
+        List<Item> items = new ArrayList<>();
+        items.add(new Item("Item 1", "2024-08-20", 1));
+        items.add(new Item("Item 2", "2024-08-21", 2));
+        return items;
+    }
+}
+```
+
+### 3. `Item` Class
+
+This class represents an `Item` object with `itemName`, `date_added`, and `itemLocation_id` properties.
+
+```java
+// Item.java
+package com.example.myjapanese;
+
+public class Item {
+
+    private String itemName;
+    private String dateAdded;
+    private int itemLocationId;
+
+    public Item(String itemName, String dateAdded, int itemLocationId) {
+        this.itemName = itemName;
+        this.dateAdded = dateAdded;
+        this.itemLocationId = itemLocationId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public String getDateAdded() {
+        return dateAdded;
+    }
+
+    public int getItemLocationId() {
+        return itemLocationId;
+    }
+}
+```
+
+### Updated `MainActivity.java` to retrieve data from a database using Retrofit
+
+```java
+// MainActivity.java
+package com.example.myjapanese;
+
+import android.os.Bundle;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import java.util.List;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TableLayout itemTable;
+    private ApiService apiService;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        itemTable = findViewById(R.id.item_table);
+
+        // Initialize Retrofit
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://your-api-base-url.com/")  // Replace with your actual base URL
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        apiService = retrofit.create(ApiService.class);
+
+        // Fetch items from the database
+        fetchItems();
+    }
+
+    private void fetchItems() {
+        Call<List<Item>> call = apiService.getItems();
+        call.enqueue(new Callback<List<Item>>() {
+            @Override
+            public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Item> items = response.body();
+                    populateTable(items);
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to load items", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Item>> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void populateTable(List<Item> items) {
+        for (Item item : items) {
+            TableRow tableRow = new TableRow(this);
+
+            TextView itemNameView = new TextView(this);
+            itemNameView.setText(item.getItemName());
+            itemNameView.setPadding(8, 8, 8, 8);
+
+            TextView dateAddedView = new TextView(this);
+            dateAddedView.setText(item.getDateAdded()); // Assuming dateAdded is a String
+            dateAddedView.setPadding(8, 8, 8, 8);
+
+            TextView itemLocationIdView = new TextView(this);
+            itemLocationIdView.setText(String.valueOf(item.getItemLocationId()));
+            itemLocationIdView.setPadding(8, 8, 8, 8);
+
+            tableRow.addView(itemNameView);
+            tableRow.addView(dateAddedView);
+            tableRow.addView(itemLocationIdView);
+
+            itemTable.addView(tableRow);
+        }
+    }
+}
+```
+### API Endpoints
+
+Ensure that your API endpoints are properly configured and that your server returns the expected JSON format for `Item` objects. The `Item` class should have the appropriate fields and getters.
+
+### **Modify the `populateTable` Method to Handle Click Events:**
+
+You will need to set an `OnClickListener` for each `TableRow` when you populate the table. When a row is clicked, the values of that row will be used to update the `TextView` and `Spinner`.
+
+Here’s how you can modify the `populateTable` method:
+
+```java
+private void populateTable(final List<Item> items) {
+    runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+            itemTable.removeAllViews(); // Clear the table before populating it
+            
+            for (final Item item : items) {
+                TableRow tableRow = new TableRow(MainActivity.this);
+                
+                TextView itemNameView = new TextView(MainActivity.this);
+                itemNameView.setText(item.getItemName() != null ? item.getItemName() : "Unknown Name");
+                itemNameView.setPadding(8, 8, 8, 8);
+
+                TextView dateAddedView = new TextView(MainActivity.this);
+                dateAddedView.setText(item.getDateAdded() != null ? item.getDateAdded() : "Unknown Date");
+                dateAddedView.setPadding(8, 8, 8, 8);
+
+                TextView itemLocationIdView = new TextView(MainActivity.this);
+                itemLocationIdView.setText(String.valueOf(item.getItemLocationId()));
+                itemLocationIdView.setPadding(8, 8, 8, 8);
+
+                tableRow.addView(itemNameView);
+                tableRow.addView(dateAddedView);
+                tableRow.addView(itemLocationIdView);
+
+                // Set the OnClickListener for the TableRow
+                tableRow.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // Update the TextViews and Spinner based on the clicked item
+                        selectedDateText.setText(item.getDateAdded());
+                        txt1.setText(item.getItemName());
+
+                        // Find the position of the itemLocationId in the Spinner's adapter
+                        for (int i = 0; i < locationAdapter.getCount(); i++) {
+                            Location location = locationAdapter.getItem(i);
+                            if (location != null && location.getId() == item.getItemLocationId()) {
+                                locationSpinner.setSelection(i);
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                itemTable.addView(tableRow);
+            }
+        }
+    });
+}
+```
+
+### **Explanation:**
+- **`TableRow ClickListener:`** Each `TableRow` is given an `OnClickListener`. When the row is clicked, it retrieves the `item` associated with that row.
+- **`Update TextViews and Spinner:`** The `TextView` for the date (`selectedDateText`) and the item name (`txt1`) are updated with the values from the selected `item`. The `Spinner` (`locationSpinner`) is updated by finding the position of the `itemLocationId` in the adapter and setting the `Spinner` to that position.
+
+### **Ensuring Data Binding:**
+Ensure that the `Spinner` is properly populated with locations before you try to set its selection. You should call `fetchLocations()` before populating the table to ensure that the `locationSpinner` has all the necessary data.
+
+### **UI Thread Consideration:**
+Since you're using `runOnUiThread` in `populateTable`, the UI updates are guaranteed to run on the main thread, ensuring that the `TextViews` and `Spinner` are updated safely.
 
 
 
