@@ -994,22 +994,26 @@ private void populateTable(final List<Item> items) {
     runOnUiThread(new Runnable() {
         @Override
         public void run() {
-            // Preserve the first row as the header (assuming it's already there)
+            // Preserve the header by removing only the rows after the header
             int childCount = itemTable.getChildCount();
-            if (childCount > 1) {
-                // Remove all rows except the header
+            if (childCount > 1) {  // Assuming the first row is the header
                 itemTable.removeViews(1, childCount - 1);
             }
 
-            for (final Item item : items) {
+            // Define the colors for even and odd rows
+            int evenRowColor = getResources().getColor(android.R.color.darker_gray);  // Example color for even rows
+            int oddRowColor = getResources().getColor(android.R.color.white);         // Example color for odd rows
+
+            for (int i = 0; i < items.size(); i++) {
+                Item item = items.get(i);
                 TableRow tableRow = new TableRow(MainActivity.this);
-                
+
                 TextView itemNameView = new TextView(MainActivity.this);
-                itemNameView.setText(item.getItemName() != null ? item.getItemName() : "Unknown Name");
+                itemNameView.setText(item.getItemName());
                 itemNameView.setPadding(8, 8, 8, 8);
 
                 TextView dateAddedView = new TextView(MainActivity.this);
-                dateAddedView.setText(item.getDateAdded() != null ? item.getDateAdded() : "Unknown Date");
+                dateAddedView.setText(item.getDateAdded());
                 dateAddedView.setPadding(8, 8, 8, 8);
 
                 TextView itemLocationIdView = new TextView(MainActivity.this);
@@ -1020,21 +1024,32 @@ private void populateTable(final List<Item> items) {
                 tableRow.addView(dateAddedView);
                 tableRow.addView(itemLocationIdView);
 
-                // Set the OnClickListener for the TableRow
+                // Set the background color of the row based on its position (even or odd)
+                if (i % 2 == 0) {
+                    tableRow.setBackgroundColor(evenRowColor);  // Even row color
+                } else {
+                    tableRow.setBackgroundColor(oddRowColor);   // Odd row color
+                }
+
+                // Add OnClickListener to each row
                 tableRow.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // Update the TextViews and Spinner based on the clicked item
+                        // Set the selected values to the TextViews and Spinner
                         selectedDateText.setText(item.getDateAdded());
                         txt1.setText(item.getItemName());
 
-                        // Find the position of the itemLocationId in the Spinner's adapter
+                        // Find the location in the spinner by its ID
+                        int locationPosition = -1;
                         for (int i = 0; i < locationAdapter.getCount(); i++) {
-                            Location location = locationAdapter.getItem(i);
-                            if (location != null && location.getId() == item.getItemLocationId()) {
-                                locationSpinner.setSelection(i);
+                            if (locationAdapter.getItem(i).getId() == item.getItemLocationId()) {
+                                locationPosition = i;
                                 break;
                             }
+                        }
+
+                        if (locationPosition >= 0) {
+                            locationSpinner.setSelection(locationPosition);
                         }
                     }
                 });
@@ -1044,6 +1059,7 @@ private void populateTable(final List<Item> items) {
         }
     });
 }
+
 
 ```
 
