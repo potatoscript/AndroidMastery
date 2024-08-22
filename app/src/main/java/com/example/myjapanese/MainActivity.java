@@ -2,25 +2,22 @@ package com.example.myjapanese;
 
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
-import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.Spinner;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -29,6 +26,9 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
+
+    private TableLayout itemTable;
+
 
     private TextView txt1, txt2;
     private Button fetchButton;
@@ -47,7 +47,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        selectedDateText = findViewById(R.id.selected_date_text);
+        itemTable = findViewById(R.id.item_table);  // Make sure item_table exists in your layout XML
+
+        selectedDateText = findViewById(R.id.date_added_text);
 
         selectedDateText.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        locationSpinner = findViewById(R.id.location_spinner);
+        locationSpinner = findViewById(R.id.item_location_id_text);
         locationsList = new ArrayList<>();
 //        locationAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, new ArrayList<>());
 //        locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -76,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Retrofit
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.91.137:8000/")
+                .baseUrl("http://192.168.196.137:8000/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -116,10 +118,105 @@ public class MainActivity extends AppCompatActivity {
         });
 
         fetchLocations();
+
+        fetchItems();
     }
 
+
+    private void fetchItems() {
+        Call<List<Item>> call = apiService.getItems();
+        call.enqueue(new Callback<List<Item>>() {
+            @Override
+            public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Item> items = response.body();
+                    populateTable(items);
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to load items", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Item>> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void populateTable(final List<Item> items) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Preserve the header by removing only the rows after the header
+                int childCount = itemTable.getChildCount();
+                if (childCount > 1) {  // Assuming the first row is the header
+                    itemTable.removeViews(1, childCount - 1);
+                }
+
+                // Define the colors for even and odd rows
+                int evenRowColor = getResources().getColor(android.R.color.darker_gray);  // Example color for even rows
+                int oddRowColor = getResources().getColor(android.R.color.white);         // Example color for odd rows
+
+                for (int i = 0; i < items.size(); i++) {
+                    Item item = items.get(i);
+                    TableRow tableRow = new TableRow(MainActivity.this);
+
+                    TextView itemNameView = new TextView(MainActivity.this);
+                    itemNameView.setText(item.getItemName());
+                    itemNameView.setPadding(8, 8, 8, 8);
+
+                    TextView dateAddedView = new TextView(MainActivity.this);
+                    dateAddedView.setText(item.getDateAdded());
+                    dateAddedView.setPadding(8, 8, 8, 8);
+
+                    TextView itemLocationIdView = new TextView(MainActivity.this);
+                    itemLocationIdView.setText(String.valueOf(item.getItemLocationId()));
+                    itemLocationIdView.setPadding(8, 8, 8, 8);
+
+                    tableRow.addView(itemNameView);
+                    tableRow.addView(dateAddedView);
+                    tableRow.addView(itemLocationIdView);
+
+                    // Set the background color of the row based on its position (even or odd)
+                    if (i % 2 == 0) {
+                        tableRow.setBackgroundColor(evenRowColor);  // Even row color
+                    } else {
+                        tableRow.setBackgroundColor(oddRowColor);   // Odd row color
+                    }
+
+                    // Add OnClickListener to each row
+                    tableRow.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Set the selected values to the TextViews and Spinner
+                            selectedDateText.setText(item.getDateAdded());
+                            txt1.setText(item.getItemName());
+
+                            // Find the location in the spinner by its ID
+                            int locationPosition = -1;
+                            for (int i = 0; i < locationAdapter.getCount(); i++) {
+                                if (locationAdapter.getItem(i).getId() == item.getItemLocationId()) {
+                                    locationPosition = i;
+                                    break;
+                                }
+                            }
+
+                            if (locationPosition >= 0) {
+                                locationSpinner.setSelection(locationPosition);
+                            }
+                        }
+                    });
+
+                    itemTable.addView(tableRow);
+                }
+            }
+        });
+    }
+
+
+
     private void addItem(String itemName, int itemLocationId) {
-        Item item = new Item(itemName, itemLocationId);
+        Item item = new Item(itemName, "", itemLocationId);
 
         Call<Item> call = apiService.createItem(item);
         call.enqueue(new Callback<Item>() {
@@ -198,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void fetchItems() {
+    private List<Item> fetchItems_() {
         Call<List<Item>> call = apiService.getItems();
         call.enqueue(new Callback<List<Item>>() {
             @Override
@@ -226,6 +323,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "ErrorX: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+        return null;
     }
 
     private void showDatePickerDialog() {

@@ -11,7 +11,7 @@
 
 
     <TextView
-        android:id="@+id/selected_date_text"
+        android:id="@+id/date_added_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Selected Date"
@@ -20,7 +20,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.228"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText"
+        app:layout_constraintTop_toBottomOf="@+id/item_name_text"
         app:layout_constraintVertical_bias="0.085" />
 
     <TextView
@@ -75,7 +75,7 @@
         app:layout_constraintVertical_bias="0.191" />
 
     <EditText
-        android:id="@+id/editTextText"
+        android:id="@+id/item_name_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -89,14 +89,48 @@
         app:layout_constraintVertical_bias="0.19" />
 
     <Spinner
-        android:id="@+id/location_spinner"
+        android:id="@+id/item_location_id_text"
         android:layout_width="217dp"
         android:layout_height="51dp"
-        app:layout_constraintBottom_toTopOf="@+id/editTextText"
+        app:layout_constraintBottom_toTopOf="@+id/item_name_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.164"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.62" />
+
+    <TableLayout
+        android:id="@+id/item_table"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txt2"
+        app:layout_constraintVertical_bias="0.703">
+        <!-- Table Header -->
+        <TableRow>
+
+            <TextView
+                android:padding="8dp"
+                android:text="Item Name"
+                android:textStyle="bold" />
+
+            <TextView
+                android:padding="8dp"
+                android:text="Date Added"
+                android:textStyle="bold" />
+
+            <TextView
+                android:padding="8dp"
+                android:text="Location ID"
+                android:textStyle="bold" />
+        </TableRow>
+
+        <!-- Data rows will be added programmatically -->
+
+    </TableLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
