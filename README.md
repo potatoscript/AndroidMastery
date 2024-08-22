@@ -994,8 +994,13 @@ private void populateTable(final List<Item> items) {
     runOnUiThread(new Runnable() {
         @Override
         public void run() {
-            itemTable.removeAllViews(); // Clear the table before populating it
-            
+            // Preserve the first row as the header (assuming it's already there)
+            int childCount = itemTable.getChildCount();
+            if (childCount > 1) {
+                // Remove all rows except the header
+                itemTable.removeViews(1, childCount - 1);
+            }
+
             for (final Item item : items) {
                 TableRow tableRow = new TableRow(MainActivity.this);
                 
@@ -1039,6 +1044,7 @@ private void populateTable(final List<Item> items) {
         }
     });
 }
+
 ```
 
 ### **Explanation:**
