@@ -9,7 +9,8 @@ Welcome to **AndroidMastery**, a comprehensive project designed to help you mast
 - [DatePickerDialog](#datepickerdialog)
 - [Spinner](#spinner)
 - [Table (READ)](#table)
-- [UPDATE DATA](#update-data)
+- [Table (UPDATE)](#update-data)
+- [Table (DELETE)](#delete-data)
 - [Resolve Security Policies Issue](#resolve-security-policies-issue)
 - [Resolve Response Error Issue](#resolve-response-error-issue)
 - [JSON Object Error Issue](#json-object-error-issue)
@@ -1392,6 +1393,249 @@ urlpatterns = [
     path('items/', ItemListCreate.as_view(), name='item-list-create'),
     path('items/<int:pk>/', ItemDetailUpdateDelete.as_view(), name='item-detail-update-delete'),
 ]
+```
+
+## Delete Data
+[Table of Contents](#table-of-contents)<br>
+
+To add a delete button to each row in the table and enable it to delete the corresponding item from the backend, follow these steps:
+
+### 1. Update `populateTable` Method
+
+Add a `Button` for deletion to each `TableRow` and handle its click event. Modify the `populateTable` method in your `MainActivity` to include a delete button in each row and handle the deletion.
+
+Here’s how you can update your `populateTable` method:
+
+```java
+private void populateTable(final List<Item> items) {
+    runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+            // Preserve the header by removing only the rows after the header
+            int childCount = itemTable.getChildCount();
+            if (childCount > 1) {  // Assuming the first row is the header
+                itemTable.removeViews(1, childCount - 1);
+            }
+
+            // Define the colors for even and odd rows
+            int evenRowColor = getResources().getColor(android.R.color.darker_gray);  // Example color for even rows
+            int oddRowColor = getResources().getColor(android.R.color.white);         // Example color for odd rows
+
+            for (int i = 0; i < items.size(); i++) {
+                final Item item = items.get(i);
+                TableRow tableRow = new TableRow(MainActivity.this);
+
+                TextView itemNameView = new TextView(MainActivity.this);
+                itemNameView.setText(item.getItemName());
+                itemNameView.setPadding(8, 8, 8, 8);
+
+                TextView dateAddedView = new TextView(MainActivity.this);
+                dateAddedView.setText(item.getDateAdded());
+                dateAddedView.setPadding(8, 8, 8, 8);
+
+                TextView itemLocationIdView = new TextView(MainActivity.this);
+                itemLocationIdView.setText(String.valueOf(item.getItemLocationId()));
+                itemLocationIdView.setPadding(8, 8, 8, 8);
+
+                Button deleteButton = new Button(MainActivity.this);
+                deleteButton.setText("Delete");
+                deleteButton.setPadding(8, 8, 8, 8);
+
+                // Set the background color of the row based on its position (even or odd)
+                if (i % 2 == 0) {
+                    tableRow.setBackgroundColor(evenRowColor);  // Even row color
+                } else {
+                    tableRow.setBackgroundColor(oddRowColor);   // Odd row color
+                }
+
+                // Add views to the row
+                tableRow.addView(itemNameView);
+                tableRow.addView(dateAddedView);
+                tableRow.addView(itemLocationIdView);
+                tableRow.addView(deleteButton);
+
+                // Add OnClickListener to each row
+                tableRow.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // Set the selected values to the TextViews and Spinner
+                        selectedDateText.setText(item.getDateAdded());
+                        itemNameText.setText(item.getItemName());
+
+                        // Find the location in the spinner by its ID
+                        int locationPosition = -1;
+                        for (int i = 0; i < locationAdapter.getCount(); i++) {
+                            if (locationAdapter.getItem(i).getId() == item.getItemLocationId()) {
+                                locationPosition = i;
+                                break;
+                            }
+                        }
+
+                        if (locationPosition >= 0) {
+                            locationSpinner.setSelection(locationPosition);
+                        }
+                    }
+                });
+
+                // Handle delete button click
+                deleteButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            showDeleteConfirmationDialog(item.getId(), tableRow);
+                        }
+                });
+
+                itemTable.addView(tableRow);
+            }
+        }
+    });
+}
+```
+To add a confirmation dialog before deleting an item, you can use an `AlertDialog` in Android. This dialog will ask the user to confirm their action before proceeding with the deletion. Here's how you can integrate this into your existing code:
+
+### 1. Modify `populateTable` Method
+
+Update the `populateTable` method to show a confirmation dialog when the delete button is clicked:
+
+```java
+private void populateTable(final List<Item> items) {
+    runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+            // Preserve the header by removing only the rows after the header
+            int childCount = itemTable.getChildCount();
+            if (childCount > 1) {  // Assuming the first row is the header
+                itemTable.removeViews(1, childCount - 1);
+            }
+
+            // Define the colors for even and odd rows
+            int evenRowColor = getResources().getColor(android.R.color.darker_gray);  // Example color for even rows
+            int oddRowColor = getResources().getColor(android.R.color.white);         // Example color for odd rows
+
+            for (int i = 0; i < items.size(); i++) {
+                final Item item = items.get(i);
+                TableRow tableRow = new TableRow(MainActivity.this);
+
+                TextView itemNameView = new TextView(MainActivity.this);
+                itemNameView.setText(item.getItemName());
+                itemNameView.setPadding(8, 8, 8, 8);
+
+                TextView dateAddedView = new TextView(MainActivity.this);
+                dateAddedView.setText(item.getDateAdded());
+                dateAddedView.setPadding(8, 8, 8, 8);
+
+                TextView itemLocationIdView = new TextView(MainActivity.this);
+                itemLocationIdView.setText(String.valueOf(item.getItemLocationId()));
+                itemLocationIdView.setPadding(8, 8, 8, 8);
+
+                Button deleteButton = new Button(MainActivity.this);
+                deleteButton.setText("Delete");
+                deleteButton.setPadding(8, 8, 8, 8);
+
+                // Set the background color of the row based on its position (even or odd)
+                if (i % 2 == 0) {
+                    tableRow.setBackgroundColor(evenRowColor);  // Even row color
+                } else {
+                    tableRow.setBackgroundColor(oddRowColor);   // Odd row color
+                }
+
+                // Add views to the row
+                tableRow.addView(itemNameView);
+                tableRow.addView(dateAddedView);
+                tableRow.addView(itemLocationIdView);
+                tableRow.addView(deleteButton);
+
+                // Add OnClickListener to each row
+                tableRow.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // Set the selected values to the TextViews and Spinner
+                        selectedDateText.setText(item.getDateAdded());
+                        itemNameText.setText(item.getItemName());
+
+                        // Find the location in the spinner by its ID
+                        int locationPosition = -1;
+                        for (int i = 0; i < locationAdapter.getCount(); i++) {
+                            if (locationAdapter.getItem(i).getId() == item.getItemLocationId()) {
+                                locationPosition = i;
+                                break;
+                            }
+                        }
+
+                        if (locationPosition >= 0) {
+                            locationSpinner.setSelection(locationPosition);
+                        }
+                    }
+                });
+
+                // Handle delete button click
+                deleteButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showDeleteConfirmationDialog(item.getId(), tableRow);
+                    }
+                });
+
+                itemTable.addView(tableRow);
+            }
+        }
+    });
+}
+```
+
+### 2. Implement `showDeleteConfirmationDialog` Method
+
+Add a method to show a confirmation dialog before deleting an item. This method will use `AlertDialog` to prompt the user:
+
+```java
+private void showDeleteConfirmationDialog(final int itemId, final TableRow tableRow) {
+    new AlertDialog.Builder(this)
+            .setTitle("Delete Item")
+            .setMessage("Are you sure you want to delete this item?")
+            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    deleteItem(itemId, tableRow);
+                }
+            })
+            .setNegativeButton("No", null)
+            .show();
+}
+```
+
+### 3. Implement `deleteItem` Method
+
+Add a method to handle the deletion of the item. This method will make a DELETE request to your API and remove the row from the table if the deletion is successful.
+
+```java
+private void deleteItem(int itemId, final TableRow tableRow) {
+    Call<Void> call = apiService.deleteItem(itemId);
+    call.enqueue(new Callback<Void>() {
+        @Override
+        public void onResponse(Call<Void> call, Response<Void> response) {
+            if (response.isSuccessful()) {
+                itemTable.removeView(tableRow);
+                Toast.makeText(MainActivity.this, "Item deleted successfully!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, "Failed to delete item", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        public void onFailure(Call<Void> call, Throwable t) {
+            Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    });
+}
+```
+
+### 4. Update `ApiService` Interface
+
+Ensure that your `ApiService` interface includes a method for deleting an item:
+
+```java
+@DELETE("item/{id}/")
+Call<Void> deleteItem(@Path("id") int id);
 ```
 
 
