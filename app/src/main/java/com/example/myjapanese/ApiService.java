@@ -9,6 +9,8 @@ import retrofit2.http.Body;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.PUT;
+import retrofit2.http.Path;
 
 public interface ApiService {
 
@@ -23,5 +25,9 @@ public interface ApiService {
 
     @POST("item/")
     Call<Item> createItem(@Body Item item);
+
+    @PUT("item/{id}/")
+    Call<Item> updateItem(@Path("id") int id, @Body Item item);
+
 
 }
