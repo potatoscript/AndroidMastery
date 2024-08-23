@@ -3,6 +3,7 @@ package com.example.myjapanese;
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Body;
@@ -28,6 +29,9 @@ public interface ApiService {
 
     @PUT("item/{id}/")
     Call<Item> updateItem(@Path("id") int id, @Body Item item);
+
+    @DELETE("item/{id}/")
+    Call<Void> deleteItem(@Path("id") int id);
 
 
 }

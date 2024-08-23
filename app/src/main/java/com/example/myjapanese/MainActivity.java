@@ -1,7 +1,9 @@
 package com.example.myjapanese;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -141,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                 int oddRowColor = getResources().getColor(android.R.color.white);         // Example color for odd rows
 
                 for (int i = 0; i < items.size(); i++) {
-                    Item item = items.get(i);
+                    final Item item = items.get(i);
                     TableRow tableRow = new TableRow(MainActivity.this);
 
                     TextView itemNameView = new TextView(MainActivity.this);
@@ -156,9 +158,9 @@ public class MainActivity extends AppCompatActivity {
                     itemLocationIdView.setText(String.valueOf(item.getItemLocationId()));
                     itemLocationIdView.setPadding(8, 8, 8, 8);
 
-                    tableRow.addView(itemNameView);
-                    tableRow.addView(dateAddedView);
-                    tableRow.addView(itemLocationIdView);
+                    Button deleteButton = new Button(MainActivity.this);
+                    deleteButton.setText("Delete");
+                    deleteButton.setPadding(8, 8, 8, 8);
 
                     // Set the background color of the row based on its position (even or odd)
                     if (i % 2 == 0) {
@@ -167,11 +169,17 @@ public class MainActivity extends AppCompatActivity {
                         tableRow.setBackgroundColor(oddRowColor);   // Odd row color
                     }
 
+                    // Add views to the row
+                    tableRow.addView(itemNameView);
+                    tableRow.addView(dateAddedView);
+                    tableRow.addView(itemLocationIdView);
+                    tableRow.addView(deleteButton);
+
                     // Add OnClickListener to each row
                     tableRow.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            selectedItemId = item.getId();  // Store the selected item's ID
+                            // Set the selected values to the TextViews and Spinner
                             selectedDateText.setText(item.getDateAdded());
                             itemNameText.setText(item.getItemName());
 
@@ -190,11 +198,56 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
 
+                    // Handle delete button click
+                    deleteButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            showDeleteConfirmationDialog(item.getId(), tableRow);
+                        }
+                    });
+
                     itemTable.addView(tableRow);
                 }
             }
         });
     }
+
+    private void showDeleteConfirmationDialog(final int itemId, final TableRow tableRow) {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Item")
+                .setMessage("Are you sure you want to delete this item?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        deleteItem(itemId, tableRow);
+                    }
+                })
+                .setNegativeButton("No", null)
+                .show();
+    }
+
+    private void deleteItem(int itemId, final TableRow tableRow) {
+        Call<Void> call = apiService.deleteItem(itemId);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    //itemTable.removeView(tableRow);
+                    fetchItems();  // Refresh the table to display the newly added item
+                    Toast.makeText(MainActivity.this, "Item deleted successfully!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to delete item", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
 
 
 
