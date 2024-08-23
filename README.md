@@ -1076,7 +1076,8 @@ Since you're using `runOnUiThread` in `populateTable`, the UI updates are guaran
 
 ## UPDATE DATA
 [Table of Contents](#table-of-contents)<br>
-Sure! To add editing functionality, you’ll need to include an ID in your `Item` class and handle the item editing in your `MainActivity`. Here’s a complete example with the necessary updates:
+
+Include an ID in your `Item` class and handle the item editing in your `MainActivity`:
 
 ### Updated `Item` Class
 
