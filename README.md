@@ -8,7 +8,8 @@ Welcome to **AndroidMastery**, a comprehensive project designed to help you mast
 - [Connect Android to Django API](#connect-android-to-django-api)
 - [DatePickerDialog](#datepickerdialog)
 - [Spinner](#spinner)
-- [Table](#table)
+- [Table (READ)](#table)
+- [UPDATE DATA](#update-data)
 - [Resolve Security Policies Issue](#resolve-security-policies-issue)
 - [Resolve Response Error Issue](#resolve-response-error-issue)
 - [JSON Object Error Issue](#json-object-error-issue)
@@ -1072,6 +1073,325 @@ Ensure that the `Spinner` is properly populated with locations before you try to
 
 ### **UI Thread Consideration:**
 Since you're using `runOnUiThread` in `populateTable`, the UI updates are guaranteed to run on the main thread, ensuring that the `TextViews` and `Spinner` are updated safely.
+
+## UPDATE DATA
+[Table of Contents](#table-of-contents)<br>
+Sure! To add editing functionality, you’ll need to include an ID in your `Item` class and handle the item editing in your `MainActivity`. Here’s a complete example with the necessary updates:
+
+### Updated `Item` Class
+
+Add an `id` field to the `Item` class and include the corresponding getter and setter methods:
+
+```java
+// Item.java
+package com.example.myjapanese;
+
+public class Item {
+
+    private int id; // Add this field
+    private String itemName;
+    private String date_added;
+    private int itemLocation;
+
+    // Constructors
+    public Item() {
+    }
+
+    public Item(int id, String itemName, String date_added, int itemLocation) {
+        this.id = id;
+        this.itemName = itemName;
+        this.date_added = date_added;
+        this.itemLocation = itemLocation;
+    }
+
+    // Getters and setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
+    public String getDateAdded() {
+        return date_added;
+    }
+
+    public void setDateAdded(String date_added) {
+        this.date_added = date_added;
+    }
+
+    public int getItemLocationId() {
+        return itemLocation;
+    }
+
+    public void setItemLocationId(int itemLocation) {
+        this.itemLocation = itemLocation;
+    }
+}
+```
+
+### Updated `ApiService` Interface
+
+Add a method for updating items:
+
+```java
+// ApiService.java
+package com.example.myjapanese;
+
+import java.util.List;
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Path;
+import retrofit2.http.Body;
+
+public interface ApiService {
+
+    @GET("potato_posts/")
+    Call<List<PotatoPost>> getPotatoPosts();
+
+    @GET("location/")
+    Call<List<Location>> getLocations();
+
+    @GET("item/")
+    Call<List<Item>> getItems();
+
+    @POST("item/")
+    Call<Item> createItem(@Body Item item);
+
+    @PUT("item/{id}/")
+    Call<Item> updateItem(@Path("id") int id, @Body Item item);
+}
+```
+
+### `updateItem` Method
+This method is used to update an existing item in your backend.
+
+```java
+// Method to update an existing item in the database
+private void updateItem(int itemId, String itemName, String dateAdded, int itemLocationId) {
+    Item updatedItem = new Item(itemId, itemName, dateAdded, itemLocationId);
+
+    Call<Item> call = apiService.updateItem(itemId, updatedItem);
+    call.enqueue(new Callback<Item>() {
+        @Override
+        public void onResponse(Call<Item> call, Response<Item> response) {
+            if (response.isSuccessful() && response.body() != null) {
+                fetchItems();  // Refresh the table to display the updated item
+                Toast.makeText(MainActivity.this, "Item updated successfully", Toast.LENGTH_SHORT).show();
+                selectedItemId = -1;  // Reset to add mode
+                clearInputFields();  // Clear input fields after update
+            } else {
+                Toast.makeText(MainActivity.this, "Failed to update item", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        public void onFailure(Call<Item> call, Throwable t) {
+            Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    });
+}
+```
+
+### `clearInputFields` Method
+This helper method clears the input fields after an item is added or updated.
+
+```java
+// Method to clear input fields after adding or updating an item
+private void clearInputFields() {
+    itemNameText.setText("");
+    selectedDateText.setText("");
+    locationSpinner.setSelection(0);  // Reset spinner to the first item
+}
+```
+
+### `ApiService` Interface Updates
+Make sure your `ApiService` interface is updated to include the `updateItem` method:
+
+```java
+import retrofit2.http.PUT;
+import retrofit2.http.Path;
+
+public interface ApiService {
+    // Other methods...
+
+    @PUT("item/{id}/")
+    Call<Item> updateItem(@Path("id") int id, @Body Item item);
+}
+```
+
+### `addItem` and `updateItem` Method
+```java
+// MainActivity.java
+
+    // Method to add a new item to the database
+    private void addItem(String itemName, String dateAdded, int itemLocationId) {
+        Item item = new Item(0, itemName, dateAdded, itemLocationId);
+
+        Call<Item> call = apiService.createItem(item);
+        call.enqueue(new Callback<Item>() {
+            @Override
+            public void onResponse(Call<Item> call, Response<Item> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    fetchItems();  // Refresh the table to display the newly added item
+                    Toast.makeText(MainActivity.this, "Item added successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to add item", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Item> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Method to update an existing item in the database
+    private void updateItem(int itemId, String itemName, String dateAdded, int itemLocationId) {
+        Item updatedItem = new Item(itemId, itemName, dateAdded, itemLocationId);
+
+        Call<Item> call = apiService.updateItem(itemId, updatedItem);
+        call.enqueue(new Callback<Item>() {
+            @Override
+            public void onResponse(Call<Item> call, Response<Item> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    fetchItems();  // Refresh the table to display the updated item
+                    Toast.makeText(MainActivity.this, "Item updated successfully", Toast.LENGTH_SHORT).show();
+                    selectedItemId = -1;  // Reset to add mode
+                    clearInputFields();  // Clear input fields after update
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to update item", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Item> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Method to clear input fields after adding or updating an item
+    private void clearInputFields() {
+        itemNameText.setText("");
+        selectedDateText.setText("");
+        locationSpinner.setSelection(0);  // Reset spinner to the first item
+    }
+
+}
+```
+### Update Item Method in Activity ###
+
+In your `MainActivity`, create a method to handle the update process:
+
+```java
+private void updateItem(int id, String itemName, String dateAdded, int itemLocationId) {
+    Item item = new Item(id, itemName, dateAdded, itemLocationId);
+
+    Call<Item> call = apiService.updateItem(id, item);
+    call.enqueue(new Callback<Item>() {
+        @Override
+        public void onResponse(Call<Item> call, Response<Item> response) {
+            if (response.isSuccessful()) {
+                Toast.makeText(MainActivity.this, "Item updated successfully!", Toast.LENGTH_SHORT).show();
+                fetchItems();  // Refresh the table to show updated data
+            } else {
+                try {
+                    String errorBody = response.errorBody().string();
+                    Toast.makeText(MainActivity.this, "Failed to update item: " + response.code() + " " + errorBody, Toast.LENGTH_LONG).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this, "Failed to update item and error body could not be parsed", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+
+        @Override
+        public void onFailure(Call<Item> call, Throwable t) {
+            Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    });
+}
+```
+
+### Trigger Update on Row Click ###
+
+Modify the row click logic in your table to allow editing:
+
+```java
+tableRow.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        // Set the selected values to the TextViews and Spinner
+        selectedDateText.setText(item.getDateAdded());
+        itemNameText.setText(item.getItemName());
+
+        // Find the location in the spinner by its ID
+        int locationPosition = -1;
+        for (int i = 0; i < locationAdapter.getCount(); i++) {
+            if (locationAdapter.getItem(i).getId() == item.getItemLocationId()) {
+                locationPosition = i;
+                break;
+            }
+        }
+
+        if (locationPosition >= 0) {
+            locationSpinner.setSelection(locationPosition);
+        }
+
+        // Example of how to use updateItem
+        updateItem(item.getId(), item.getItemName(), item.getDateAdded(), item.getItemLocationId());
+    }
+});
+```
+
+### Ensure `id` Field in `ItemSerializer`
+First, make sure that the `id` field is explicitly included in the `ItemSerializer` so that it gets passed to your Android app:
+
+```python
+class ItemSerializer(serializers.ModelSerializer):
+    itemLocation = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all())
+
+    class Meta:
+        model = Item
+        fields = ['id', 'itemName', 'date_added', 'itemLocation']  # Include 'id' field
+```
+
+### Ensure Backend Supports PUT Method
+Lastly, make sure your Django view supports the `PUT` method for updating items. If you're using `ListCreateAPIView`, you might want to extend `RetrieveUpdateDestroyAPIView` for individual item updates:
+
+```python
+from rest_framework import generics
+
+class ItemDetailUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+```
+
+Add the corresponding URL pattern in your `urls.py`:
+
+```python
+from django.urls import path
+from .views import ItemListCreate, ItemDetailUpdateDelete
+
+urlpatterns = [
+    path('items/', ItemListCreate.as_view(), name='item-list-create'),
+    path('items/<int:pk>/', ItemDetailUpdateDelete.as_view(), name='item-detail-update-delete'),
+]
+```
 
 
 
