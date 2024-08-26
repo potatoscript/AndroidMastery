@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.DialogInterface;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -19,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -31,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private TableLayout itemTable;
 
     private ApiService apiService;
-    private Button addButton;
+    private Button addButton, reloadButton;
 
     private Spinner locationSpinner;
     private List<Location> locationsList;
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         locationSpinner.setAdapter(locationAdapter);
 
         addButton = findViewById(R.id.save_btn);
+        reloadButton = findViewById(R.id.reload_btn);
 
         // Initialize Retrofit
         Retrofit retrofit = new Retrofit.Builder()
@@ -74,6 +77,14 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         apiService = retrofit.create(ApiService.class);
+
+        reloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                clearInputFields();
+                fetchItems();
+            }
+        });
 
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -182,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
                             // Set the selected values to the TextViews and Spinner
                             selectedDateText.setText(item.getDateAdded());
                             itemNameText.setText(item.getItemName());
+                            selectedItemId = item.getId();  // Set the selected item ID for editing
 
                             // Find the location in the spinner by its ID
                             int locationPosition = -1;
@@ -248,9 +260,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
-
     // Method to add a new item to the database
     private void addItem(String itemName, String dateAdded, int itemLocationId) {
         Item item = new Item(0, itemName, dateAdded, itemLocationId);
@@ -302,7 +311,15 @@ public class MainActivity extends AppCompatActivity {
     // Method to clear input fields after adding or updating an item
     private void clearInputFields() {
         itemNameText.setText("");
-        selectedDateText.setText("");
+
+        // Get today's date
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String todayDate = dateFormat.format(calendar.getTime());
+
+        // Set today's date to selectedDateText
+        selectedDateText.setText(todayDate);
+
         locationSpinner.setSelection(0);  // Reset spinner to the first item
     }
 
@@ -344,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                         // Note: month is 0-based, so we add 1
-                        String selectedDate = dayOfMonth + "-" + (month + 1) + "-" + year;
+                        String selectedDate = year + "-" + (month + 1) + "-" + dayOfMonth;
                         selectedDateText.setText(selectedDate);
                     }
                 },
